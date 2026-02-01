@@ -1,0 +1,45 @@
+{% extends 'analyzer/base.html' %}
+
+{% block title %}Login - Skill Gap Analyzer{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="auth-header">
+            <h1>🔐 Login</h1>
+            <p>Access your skill analysis dashboard</p>
+        </div>
+
+        <form method="POST" class="auth-form">
+            {% csrf_token %}
+
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" required 
+                       placeholder="Enter your username" autofocus>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" required 
+                       placeholder="Enter your password">
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block">
+                Login
+            </button>
+
+            <p class="auth-footer">
+                Don't have an account? 
+                <a href="{% url 'analyzer:register' %}">Register now</a>
+            </p>
+        </form>
+
+        <div class="info-box">
+            <strong>Demo Credentials:</strong>
+            <p>Username: <code>testuser</code></p>
+            <p>Password: <code>Demo@123</code></p>
+        </div>
+    </div>
+</div>
+{% endblock %}

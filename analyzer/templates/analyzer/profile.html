@@ -1,0 +1,393 @@
+{% extends 'analyzer/base.html' %}
+
+{% block title %}My Profile - Skill Gap Analyzer{% endblock %}
+
+{% block content %}
+<div class="profile-container">
+    <div class="container">
+        <div class="profile-header">
+            <h1>📋 My Profile</h1>
+            <p>View and update your academic information</p>
+        </div>
+
+        <div class="profile-content">
+            <div class="profile-card">
+                <h2>Personal Information</h2>
+                
+                <form method="POST" class="profile-form">
+                    {% csrf_token %}
+                    
+                    <!-- User Info (Read-only) -->
+                    <div class="form-section">
+                        <h3>Account Details</h3>
+                        
+                        <div class="form-group">
+                            <label for="username">Username</label>
+                            <input type="text" id="username" value="{{ user.username }}" class="form-control" readonly>
+                            <small>Your login username</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="email">Email</label>
+                            <input type="email" id="email" value="{{ user.email }}" class="form-control" readonly>
+                            <small>Your registered email address</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="phone">Phone Number</label>
+                            <input type="tel" id="phone" name="phone_number" value="{{ student.phone_number }}" 
+                                   class="form-control" placeholder="Enter your phone number">
+                            <small>Contact number for placement coordinators</small>
+                        </div>
+                    </div>
+
+                    <!-- Academic Info -->
+                    <div class="form-section">
+                        <h3>Academic Information</h3>
+                        
+                        <div class="form-group">
+                            <label for="college">College Name</label>
+                            <input type="text" id="college" name="college_name" value="{{ student.college_name }}" 
+                                   class="form-control" placeholder="Enter your college name">
+                            <small>Your educational institution</small>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="department">Department</label>
+                                <input type="text" id="department" value="{{ student.department }}" 
+                                       class="form-control" readonly>
+                                <small>Your academic department</small>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="year">Year</label>
+                                <input type="text" id="year" value="{{ student.get_year_display }}" 
+                                       class="form-control" readonly>
+                                <small>Current academic year</small>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="cgpa">CGPA</label>
+                            <input type="number" id="cgpa" name="cgpa" value="{{ student.cgpa }}" 
+                                   class="form-control" placeholder="Enter your CGPA" step="0.01" min="0" max="10">
+                            <small>Cumulative Grade Point Average (0-10 scale)</small>
+                        </div>
+                    </div>
+
+                    <!-- Stats Section -->
+                    <div class="form-section stats-section">
+                        <h3>Your Statistics</h3>
+                        
+                        <div class="stats-grid">
+                            <div class="stat-item">
+                                <div class="stat-value">{{ student.student_skills.count }}</div>
+                                <div class="stat-label">Skills Added</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">{{ student.analyses.count }}</div>
+                                <div class="stat-label">Analyses Done</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">{{ student.created_at|date:"M d, Y" }}</div>
+                                <div class="stat-label">Member Since</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">Update Profile</button>
+                        <a href="{% url 'analyzer:dashboard' %}" class="btn btn-secondary">Back to Skills</a>
+                        <a href="{% url 'analyzer:skill_history' %}" class="btn btn-tertiary">View Analysis History</a>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Sidebar Info -->
+            <div class="profile-sidebar">
+                <div class="info-card">
+                    <h3>💡 Profile Tips</h3>
+                    <ul>
+                        <li>Keep your phone number updated for placement calls</li>
+                        <li>Update your CGPA to reflect current performance</li>
+                        <li>Your skills and analyses are saved for future reference</li>
+                        <li>Run gap analysis regularly to track progress</li>
+                    </ul>
+                </div>
+
+                <div class="info-card">
+                    <h3>📊 Quick Stats</h3>
+                    <div class="quick-stat">
+                        <span class="label">Profile Completion:</span>
+                        <div class="progress-bar">
+                            <div class="progress" style="width: 100%"></div>
+                        </div>
+                        <span class="percent">100%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .profile-container {
+        padding: 40px 20px;
+        background-color: #f8f9fa;
+        min-height: calc(100vh - 200px);
+    }
+
+    .profile-header {
+        text-align: center;
+        margin-bottom: 40px;
+    }
+
+    .profile-header h1 {
+        font-size: 2.5rem;
+        margin-bottom: 10px;
+        color: #333;
+    }
+
+    .profile-header p {
+        font-size: 1.1rem;
+        color: #666;
+    }
+
+    .profile-content {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 30px;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .profile-card {
+        background: white;
+        border-radius: 10px;
+        padding: 30px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+
+    .profile-card h2 {
+        font-size: 1.8rem;
+        margin-bottom: 30px;
+        color: #333;
+        border-bottom: 3px solid #667eea;
+        padding-bottom: 15px;
+    }
+
+    .form-section {
+        margin-bottom: 30px;
+    }
+
+    .form-section h3 {
+        font-size: 1.3rem;
+        margin-bottom: 20px;
+        color: #555;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: #333;
+        font-size: 0.95rem;
+    }
+
+    .form-group input {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        font-size: 1rem;
+        transition: border-color 0.3s;
+    }
+
+    .form-group input:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 5px rgba(102, 126, 234, 0.3);
+    }
+
+    .form-group input[readonly] {
+        background-color: #f5f5f5;
+        cursor: not-allowed;
+    }
+
+    .form-group small {
+        display: block;
+        margin-top: 5px;
+        color: #999;
+        font-size: 0.85rem;
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+    }
+
+    .stats-section {
+        background-color: #f0f2ff;
+        padding: 20px;
+        border-radius: 8px;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 15px;
+    }
+
+    .stat-item {
+        background: white;
+        padding: 15px;
+        border-radius: 8px;
+        text-align: center;
+    }
+
+    .stat-value {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #667eea;
+        margin-bottom: 5px;
+    }
+
+    .stat-label {
+        font-size: 0.9rem;
+        color: #666;
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 30px;
+        padding-top: 30px;
+        border-top: 1px solid #eee;
+    }
+
+    .btn-tertiary {
+        background-color: #6c757d !important;
+        color: white !important;
+        padding: 10px 20px !important;
+        border-radius: 5px !important;
+        text-decoration: none !important;
+        border: none !important;
+        cursor: pointer !important;
+        transition: background-color 0.3s !important;
+    }
+
+    .btn-tertiary:hover {
+        background-color: #5a6268 !important;
+    }
+
+    /* Sidebar */
+    .profile-sidebar {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .info-card {
+        background: white;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+
+    .info-card h3 {
+        font-size: 1.2rem;
+        margin-bottom: 15px;
+        color: #333;
+    }
+
+    .info-card ul {
+        list-style: none;
+        padding: 0;
+    }
+
+    .info-card li {
+        padding: 10px 0;
+        color: #666;
+        border-bottom: 1px solid #f0f0f0;
+        font-size: 0.95rem;
+    }
+
+    .info-card li:last-child {
+        border-bottom: none;
+    }
+
+    .info-card li:before {
+        content: "✓ ";
+        color: #28a745;
+        font-weight: bold;
+        margin-right: 8px;
+    }
+
+    .quick-stat {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .quick-stat .label {
+        flex: 1;
+        font-size: 0.9rem;
+        color: #666;
+    }
+
+    .progress-bar {
+        flex: 2;
+        height: 8px;
+        background-color: #e0e0e0;
+        border-radius: 4px;
+        overflow: hidden;
+    }
+
+    .progress {
+        height: 100%;
+        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        transition: width 0.3s;
+    }
+
+    .quick-stat .percent {
+        flex: 0.5;
+        text-align: right;
+        font-weight: 600;
+        color: #667eea;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .profile-content {
+            grid-template-columns: 1fr;
+        }
+
+        .profile-header h1 {
+            font-size: 2rem;
+        }
+
+        .form-row {
+            grid-template-columns: 1fr;
+        }
+
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .form-actions {
+            flex-direction: column;
+        }
+
+        .btn, .btn-tertiary {
+            width: 100% !important;
+        }
+    }
+</style>
+{% endblock %}

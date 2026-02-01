@@ -1,0 +1,465 @@
+{% extends 'analyzer/base.html' %}
+
+{% block title %}Skill Gap Report - Skill Gap Analyzer{% endblock %}
+
+{% block content %}
+<div class="result-container">
+    <!-- Header Section -->
+    <div class="result-header">
+        <div class="result-title">
+            <h1>📊 Your Skill Gap Analysis Report</h1>
+            <p class="role-info">
+                Role: <strong>{{ job_role.title }}</strong> @ <strong>{{ company.name }}</strong>
+            </p>
+        </div>
+    </div>
+
+    <!-- Main Score Card -->
+    <div class="score-card">
+        <div class="score-circle">
+            <svg viewBox="0 0 100 100" class="progress-ring">
+                <circle cx="50" cy="50" r="45" fill="none" stroke="#e0e0e0" stroke-width="8"></circle>
+                <circle cx="50" cy="50" r="45" fill="none" stroke="#007bff" stroke-width="8" 
+                        stroke-dasharray="282.743" 
+                        stroke-dashoffset="{{ 282.743 * (100 - analysis.placement_readiness) / 100 }}"
+                        class="progress-circle"></circle>
+            </svg>
+            <div class="score-value">{{ analysis.placement_readiness|floatformat:1 }}%</div>
+        </div>
+
+        <div class="score-details">
+            <h2>Placement Readiness Score</h2>
+            <p class="risk-level risk-{{ analysis.risk_level|lower }}">
+                {{ analysis.risk_description }}
+            </p>
+            
+            <div class="metrics">
+                <div class="metric">
+                    <span class="metric-label">Skills Matched:</span>
+                    <span class="metric-value">{{ analysis.matched_count }}/{{ analysis.total_required }}</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Skill Gaps:</span>
+                    <span class="metric-value">{{ analysis.gap_count }}</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Proficiency Gaps:</span>
+                    <span class="metric-value">{{ analysis.partial_match_count }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Matched Skills Section -->
+    {% if analysis.matched_skills %}
+        <div class="section matched-section">
+            <div class="section-header success">
+                <h3>✅ Skills You Have ({{ analysis.matched_skills|length }})</h3>
+            </div>
+            <div class="skills-list">
+                {% for match in analysis.matched_skills %}
+                    <div class="skill-badge matched">
+                        <div class="skill-main">
+                            <strong>{{ match.skill.name }}</strong>
+                            <span class="skill-category">{{ match.skill.category }}</span>
+                        </div>
+                        <div class="skill-proficiency">
+                            <span class="your-prof">You: {{ match.student_proficiency }}</span>
+                            <span class="required-prof">Required: {{ match.required_proficiency }}</span>
+                        </div>
+                        {% if match.is_verified %}
+                            <div class="verified-badge">✓ Verified</div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Skill Gaps Section (Critical) -->
+    {% if analysis.skill_gaps %}
+        <div class="section gap-section">
+            <div class="section-header danger">
+                <h3>⛔ Skills You Need To Learn ({{ analysis.skill_gaps|length }})</h3>
+            </div>
+            
+            {% for gap in analysis.skill_gaps %}
+                <div class="gap-item {% if gap.is_mandatory %}mandatory{% else %}optional{% endif %}">
+                    <div class="gap-header">
+                        <strong>{{ gap.skill.name }}</strong>
+                        {% if gap.is_mandatory %}
+                            <span class="mandatory-badge">MANDATORY</span>
+                        {% else %}
+                            <span class="optional-badge">OPTIONAL</span>
+                        {% endif %}
+                    </div>
+
+                    <p class="gap-description">{{ gap.skill.description }}</p>
+
+                    <div class="gap-details">
+                        <span class="detail-item">
+                            <span class="label">Category:</span> {{ gap.skill.category }}
+                        </span>
+                        <span class="detail-item">
+                            <span class="label">Difficulty:</span> {{ gap.skill.difficulty_level }}
+                        </span>
+                        <span class="detail-item">
+                            <span class="label">Required Level:</span> {{ gap.proficiency_needed }}
+                        </span>
+                    </div>
+
+                    <!-- Learning Resources for this gap -->
+                    {% if gap.skill.id in gap_resources %}
+                        <div class="resources-box">
+                            <h4>📚 Learning Resources:</h4>
+                            {% for resource in gap_resources[gap.skill.id].resources %}
+                                <div class="resource-item">
+                                    <a href="{{ resource.url }}" target="_blank" class="resource-link">
+                                        <div class="resource-title">{{ resource.title }}</div>
+                                        <div class="resource-meta">
+                                            <span class="resource-type">{{ resource.get_resource_type_display }}</span>
+                                            <span class="resource-hours">⏱️ {{ resource.estimated_hours }}h</span>
+                                            {% if resource.is_free %}
+                                                <span class="resource-free">FREE</span>
+                                            {% else %}
+                                                <span class="resource-paid">PAID</span>
+                                            {% endif %}
+                                        </div>
+                                    </a>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <!-- Proficiency Gaps Section -->
+    {% if analysis.partial_matches %}
+        <div class="section improvement-section">
+            <div class="section-header warning">
+                <h3>⚡ Skills To Improve ({{ analysis.partial_matches|length }})</h3>
+            </div>
+            <div class="skills-list">
+                {% for gap in analysis.partial_matches %}
+                    <div class="skill-badge improvement">
+                        <div class="skill-main">
+                            <strong>{{ gap.skill.name }}</strong>
+                            <span class="skill-category">{{ gap.skill.category }}</span>
+                        </div>
+                        <div class="skill-proficiency">
+                            <span class="your-prof">Your Level: {{ gap.student_proficiency }}</span>
+                            <span class="required-prof">Needed Level: {{ gap.required_proficiency }}</span>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Recommendations Section -->
+    {% if analysis.recommendations %}
+        <div class="section recommendations-section">
+            <div class="section-header">
+                <h3>🎯 Learning Roadmap & Recommendations</h3>
+            </div>
+            
+            {% for rec in analysis.recommendations %}
+                <div class="recommendation-card priority-{{ rec.priority }}">
+                    <h4>{{ rec.title }}</h4>
+                    <p>{{ rec.description }}</p>
+                    <ul class="rec-skills">
+                        {% for skill in rec.skills %}
+                            <li>{{ skill.skill.name }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endfor %}
+
+            <div class="roadmap-hint">
+                💡 <strong>Estimated Timeline:</strong> You can complete your upskilling in <strong>4-8 weeks</strong> 
+                by dedicating 10-15 hours per week to learning these skills.
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Action Buttons -->
+    <div class="action-buttons">
+        <a href="{% url 'analyzer:dashboard' %}" class="btn btn-secondary">
+            ← Update My Skills
+        </a>
+        <a href="{% url 'analyzer:select_role' %}" class="btn btn-secondary">
+            Analyze Another Role →
+        </a>
+        <a href="{% url 'analyzer:skill_history' %}" class="btn btn-info">
+            📊 View Analysis History
+        </a>
+    </div>
+
+    <!-- Export Section (Optional) -->
+    <div class="export-section">
+        <p>💾 <strong>Tip:</strong> You can print or save this report as PDF (Ctrl+P) for your records.</p>
+    </div>
+</div>
+
+<style>
+    .result-container {
+        padding: 20px 0;
+    }
+
+    .score-circle {
+        position: relative;
+        width: 200px;
+        height: 200px;
+        margin: 0 auto;
+    }
+
+    .progress-ring {
+        transform: rotate(-90deg);
+        width: 100%;
+        height: 100%;
+    }
+
+    .score-value {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 3em;
+        font-weight: bold;
+        color: #007bff;
+    }
+
+    .score-card {
+        background: white;
+        border: 2px solid #e0e0e0;
+        border-radius: 12px;
+        padding: 30px;
+        display: grid;
+        grid-template-columns: 250px 1fr;
+        gap: 40px;
+        margin: 30px 0;
+        align-items: center;
+    }
+
+    .score-details h2 {
+        margin-top: 0;
+    }
+
+    .metrics {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 15px;
+        margin-top: 20px;
+    }
+
+    .metric {
+        background: #f5f5f5;
+        padding: 15px;
+        border-radius: 8px;
+        text-align: center;
+    }
+
+    .metric-label {
+        display: block;
+        font-size: 0.9em;
+        color: #666;
+        margin-bottom: 5px;
+    }
+
+    .metric-value {
+        display: block;
+        font-size: 1.8em;
+        font-weight: bold;
+        color: #007bff;
+    }
+
+    .section {
+        background: white;
+        border-left: 5px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 25px;
+        margin: 25px 0;
+    }
+
+    .section-header {
+        padding-bottom: 15px;
+        margin-bottom: 20px;
+        border-bottom: 2px solid #e0e0e0;
+    }
+
+    .section-header.success {
+        border-bottom-color: #28a745;
+        color: #28a745;
+    }
+
+    .section-header.danger {
+        border-bottom-color: #dc3545;
+        color: #dc3545;
+    }
+
+    .section-header.warning {
+        border-bottom-color: #ffc107;
+        color: #ffc107;
+    }
+
+    .skill-badge {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px;
+        margin: 10px 0;
+        background: #f9f9f9;
+        border-radius: 8px;
+        border-left: 4px solid #007bff;
+    }
+
+    .skill-badge.matched {
+        border-left-color: #28a745;
+    }
+
+    .skill-badge.improvement {
+        border-left-color: #ffc107;
+    }
+
+    .gap-item {
+        background: #f9f9f9;
+        padding: 20px;
+        margin: 15px 0;
+        border-radius: 8px;
+        border-left: 4px solid #dc3545;
+    }
+
+    .gap-item.optional {
+        border-left-color: #ffc107;
+    }
+
+    .mandatory-badge {
+        background: #dc3545;
+        color: white;
+        padding: 3px 8px;
+        border-radius: 4px;
+        font-size: 0.8em;
+        font-weight: bold;
+    }
+
+    .optional-badge {
+        background: #ffc107;
+        color: #333;
+        padding: 3px 8px;
+        border-radius: 4px;
+        font-size: 0.8em;
+        font-weight: bold;
+    }
+
+    .resources-box {
+        background: white;
+        padding: 15px;
+        border-radius: 6px;
+        margin-top: 15px;
+    }
+
+    .resource-item {
+        padding: 10px;
+        margin: 10px 0;
+        background: #f5f5f5;
+        border-radius: 4px;
+        border-left: 3px solid #007bff;
+    }
+
+    .resource-link {
+        text-decoration: none;
+        color: inherit;
+    }
+
+    .resource-title {
+        font-weight: bold;
+        color: #007bff;
+        margin-bottom: 5px;
+    }
+
+    .resource-meta {
+        display: flex;
+        gap: 10px;
+        font-size: 0.85em;
+        color: #666;
+    }
+
+    .resource-free {
+        background: #d4edda;
+        color: #155724;
+        padding: 2px 6px;
+        border-radius: 3px;
+    }
+
+    .resource-paid {
+        background: #cce5ff;
+        color: #004085;
+        padding: 2px 6px;
+        border-radius: 3px;
+    }
+
+    .recommendation-card {
+        background: #f5f5f5;
+        padding: 20px;
+        margin: 15px 0;
+        border-radius: 8px;
+        border-left: 4px solid #007bff;
+    }
+
+    .recommendation-card.priority-1 {
+        border-left-color: #dc3545;
+        background: #ffe0e0;
+    }
+
+    .recommendation-card.priority-2 {
+        border-left-color: #ffc107;
+        background: #fffbf0;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 15px;
+        margin: 40px 0;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .action-buttons .btn {
+        padding: 12px 25px;
+    }
+
+    .risk-level {
+        font-weight: bold;
+        font-size: 1.1em;
+        margin: 10px 0;
+    }
+
+    .risk-low {
+        color: #28a745;
+    }
+
+    .risk-medium {
+        color: #ffc107;
+    }
+
+    .risk-high {
+        color: #dc3545;
+    }
+
+    .risk-critical {
+        color: #721c24;
+    }
+
+    @media print {
+        .action-buttons, .navbar, .footer {
+            display: none;
+        }
+        
+        body {
+            background: white;
+        }
+    }
+</style>
+{% endblock %}

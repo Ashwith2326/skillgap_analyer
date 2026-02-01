@@ -1,0 +1,109 @@
+{% extends 'analyzer/base.html' %}
+
+{% block title %}Register - Skill Gap Analyzer{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="auth-header">
+            <h1>📝 Create Account</h1>
+            <p>Join thousands of students improving their placement chances</p>
+        </div>
+
+        <form method="POST" class="auth-form">
+            {% csrf_token %}
+
+            <!-- Personal Information -->
+            <fieldset class="form-section">
+                <legend>Personal Information</legend>
+                
+                <div class="form-group">
+                    <label for="username">Username *</label>
+                    <input type="text" id="username" name="username" required 
+                           placeholder="Choose a unique username" minlength="3">
+                    <small>3-30 characters, alphanumeric</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email *</label>
+                    <input type="email" id="email" name="email" required 
+                           placeholder="your.email@college.ac.in">
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password *</label>
+                    <input type="password" id="password" name="password" required 
+                           placeholder="Strong password (8+ chars)" minlength="8">
+                    <small>Use uppercase, lowercase, numbers, and symbols for strength</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="confirm_password">Confirm Password *</label>
+                    <input type="password" id="confirm_password" name="confirm_password" required 
+                           placeholder="Repeat your password">
+                </div>
+
+                <div class="form-group">
+                    <label for="phone_number">Phone Number *</label>
+                    <input type="tel" id="phone_number" name="phone_number" required 
+                           placeholder="10-digit mobile number" minlength="10" maxlength="15">
+                </div>
+            </fieldset>
+
+            <!-- Academic Information -->
+            <fieldset class="form-section">
+                <legend>Academic Information</legend>
+                
+                <div class="form-group">
+                    <label for="college_name">College/University Name *</label>
+                    <input type="text" id="college_name" name="college_name" required 
+                           placeholder="e.g., Delhi College of Engineering">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="department">Department *</label>
+                        <select id="department" name="department" required>
+                            <option value="">Select Department</option>
+                            {% for value, label in departments %}
+                                <option value="{{ value }}">{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="year">Year of Study *</label>
+                        <select id="year" name="year" required>
+                            <option value="">Select Year</option>
+                            {% for value, label in years %}
+                                <option value="{{ value }}">{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="cgpa">CGPA (0-10) *</label>
+                    <input type="number" id="cgpa" name="cgpa" required 
+                           placeholder="Your current CGPA" min="0" max="10" step="0.01">
+                    <small>Important for placement eligibility</small>
+                </div>
+            </fieldset>
+
+            <!-- Submit -->
+            <button type="submit" class="btn btn-primary btn-block">
+                Create Account
+            </button>
+
+            <p class="auth-footer">
+                Already have an account? 
+                <a href="{% url 'analyzer:login' %}">Login here</a>
+            </p>
+        </form>
+
+        <div class="info-box">
+            <strong>ℹ️ Note:</strong> Your information is secure and used only for placement tracking and analysis.
+        </div>
+    </div>
+</div>
+{% endblock %}
